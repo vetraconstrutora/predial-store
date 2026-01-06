@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Predial Store | Catálogo</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f4f6f8;
+}
+
+header {
+  background: #111;
+  color: #fff;
+  padding: 16px;
+  text-align: center;
+  font-size: 22px;
+}
+
+.section {
+  padding: 20px;
+}
+
+.category {
+  margin-bottom: 40px;
+}
+
+.category h2 {
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 6px;
+  margin-bottom: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.card img {
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.card h3 {
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+
+.price {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.btn {
+  margin-top: auto;
+  background: #25d366;
+  color: #fff;
+  text-align: center;
+  padding: 10px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+<header>Predial Store · Catálogo</header>
+<div id="catalog" class="section"></div>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ8W_BupQmElM08YyIf7SdLI66bh0W5HhDILZLy7bOFqE-cXOa5ihF5X_DzzY8wew1CYKfUZ6mfj6W/pub?output=csv";
+
+fetch(CSV_URL)
+  .then(res => res.text())
+  .then(csv => {
+    const lines = csv.split("\n").slice(1);
+    const categories = {};
+
+    lines.forEach(line => {
+      const cols = line.split(",");
+      if (cols.length < 6) return;
+
+      const [categoria, nome, marca, preco, imagem, whatsapp] = cols;
+
+      if (!categories[categoria]) categories[categoria] = [];
+      categories[categoria].push({ nome, marca, preco, imagem, whatsapp });
+    });
+
+    const container = document.getElementById("catalog");
+
+    Object.keys(categories).forEach(cat => {
+      const section = document.createElement("div");
+      section.className = "category";
+
+      section.innerHTML = <h2>${cat}</h2><div class="grid"></div>;
+      const grid = section.querySelector(".grid");
+
+      categories[cat].forEach(p => {
+        const msg = encodeURIComponent(Olá, tenho interesse no produto:\n${p.nome}\nValor: ${p.preco});
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <img src="${p.imagem}" alt="">
+          <h3>${p.nome}</h3>
+          <div class="price">${p.preco}</div>
+          <a class="btn" href="https://wa.me/${p.whatsapp}?text=${msg}" target="_blank">
+            Comprar no WhatsApp
+          </a>
+        `;
+        grid.appendChild(card);
+      });
+
+      container.appendChild(section);
+    });
+  });
+</script>
+</body>
+</html>

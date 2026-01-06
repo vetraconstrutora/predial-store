@@ -1,135 +1,156 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Predial Store | Catálogo</title>
+  <meta charset="UTF-8">
+  <title>Predial Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  background: #f4f6f8;
-}
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-header {
-  background: #111;
-  color: #fff;
-  padding: 16px;
-  text-align: center;
-  font-size: 22px;
-}
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
 
-.section {
-  padding: 20px;
-}
+    header {
+      background: #111;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
 
-.category {
-  margin-bottom: 40px;
-}
+    section {
+      padding: 20px;
+    }
 
-.category h2 {
-  border-bottom: 2px solid #ddd;
-  padding-bottom: 6px;
-  margin-bottom: 20px;
-}
+    h2 {
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 5px;
+      margin-top: 40px;
+    }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-}
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
 
-.card {
-  background: #fff;
-  border-radius: 6px;
-  padding: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08);
-  display: flex;
-  flex-direction: column;
-}
+    .card {
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+    }
 
-.card img {
-  width: 100%;
-  height: 150px;
-  object-fit: contain;
-  margin-bottom: 10px;
-}
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
 
-.card h3 {
-  font-size: 15px;
-  margin: 0 0 6px;
-}
+    .card h3 {
+      font-size: 16px;
+      margin: 5px 0;
+    }
 
-.price {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
+    .card small {
+      color: #666;
+      margin-bottom: 5px;
+    }
 
-.btn {
-  margin-top: auto;
-  background: #25d366;
-  color: #fff;
-  text-align: center;
-  padding: 10px;
-  border-radius: 4px;
-  text-decoration: none;
-  font-weight: bold;
-}
-</style>
+    .card p {
+      font-size: 13px;
+      color: #444;
+      flex-grow: 1;
+    }
+
+    .price {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .btn {
+      background: #000;
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+
+    .btn:hover {
+      background: #333;
+    }
+  </style>
 </head>
 
 <body>
-<header>Predial Store · Catálogo</header>
-<div id="catalog" class="section"></div>
+
+<header>Predial Store</header>
+
+<section id="catalog"></section>
 
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ8W_BupQmElM08YyIf7SdLI66bh0W5HhDILZLy7bOFqE-cXOa5ihF5X_DzzY8wew1CYKfUZ6mfj6W/pub?output=csv";
 
-fetch(CSV_URL)
-  .then(res => res.text())
-  .then(csv => {
-    const lines = csv.split("\n").slice(1);
+Papa.parse(CSV_URL, {
+  download: true,
+  header: true,
+  skipEmptyLines: true,
+  complete: function(results) {
+
+    const data = results.data;
+    const catalog = document.getElementById("catalog");
     const categories = {};
 
-    lines.forEach(line => {
-      const cols = line.split(",");
-      if (cols.length < 6) return;
+    data.forEach(item => {
+      if (!item.Categoria) return;
 
-      const [categoria, nome, marca, preco, imagem, whatsapp] = cols;
+      if (!categories[item.Categoria]) {
+        categories[item.Categoria] = [];
+      }
 
-      if (!categories[categoria]) categories[categoria] = [];
-      categories[categoria].push({ nome, marca, preco, imagem, whatsapp });
+      categories[item.Categoria].push(item);
     });
 
-    const container = document.getElementById("catalog");
-
     Object.keys(categories).forEach(cat => {
-      const section = document.createElement("div");
-      section.className = "category";
+      const title = document.createElement("h2");
+      title.textContent = cat;
+      catalog.appendChild(title);
 
-      section.innerHTML = <h2>${cat}</h2><div class="grid"></div>;
-      const grid = section.querySelector(".grid");
+      const grid = document.createElement("div");
+      grid.className = "grid";
 
       categories[cat].forEach(p => {
-        const msg = encodeURIComponent(Olá, tenho interesse no produto:\n${p.nome}\nValor: ${p.preco});
         const card = document.createElement("div");
         card.className = "card";
 
         card.innerHTML = `
-          <img src="${p.imagem}" alt="">
-          <h3>${p.nome}</h3>
-          <div class="price">${p.preco}</div>
-          <a class="btn" href="https://wa.me/${p.whatsapp}?text=${msg}" target="_blank">
-            Comprar no WhatsApp
-          </a>
+          <img src="${p.Imagem}" alt="">
+          <h3>${p.Nome}</h3>
+          <small>${p.Marca || ""}</small>
+          <p>${p.Descrição || ""}</p>
+          <div class="price">${p.Preço}</div>
+          <a class="btn" href="${p.Link}" target="_blank">Ver / Comprar</a>
         `;
+
         grid.appendChild(card);
       });
 
-      container.appendChild(section);
+      catalog.appendChild(grid);
     });
-  });
+  }
+});
 </script>
+
 </body>
 </html>

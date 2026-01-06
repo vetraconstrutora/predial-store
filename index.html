@@ -1,50 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Predial Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     body {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
+      padding: 20px;
       background: #f5f5f5;
     }
 
-    header {
-      background: #111;
-      color: #fff;
-      padding: 20px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
-    }
-
-    section {
-      padding: 20px;
-    }
-
-    h2 {
-      border-bottom: 2px solid #ddd;
-      padding-bottom: 5px;
-      margin-top: 40px;
+    h1 {
+      margin-bottom: 20px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
     }
 
     .card {
       background: #fff;
       border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 15px;
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
       display: flex;
       flex-direction: column;
     }
@@ -53,102 +36,120 @@
       width: 100%;
       height: 180px;
       object-fit: contain;
+      background: #fafafa;
       margin-bottom: 10px;
     }
 
-    .card h3 {
-      font-size: 16px;
-      margin: 5px 0;
+    .nome {
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 6px;
     }
 
-    .card small {
-      color: #666;
-      margin-bottom: 5px;
-    }
-
-    .card p {
+    .marca {
       font-size: 13px;
-      color: #444;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    .descricao {
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 10px;
       flex-grow: 1;
     }
 
-    .price {
-      font-size: 18px;
+    .preco {
       font-weight: bold;
-      margin: 10px 0;
+      margin-bottom: 10px;
     }
 
     .btn {
-      background: #000;
-      color: #fff;
       text-align: center;
       padding: 10px;
+      background: #25D366;
+      color: #fff;
       text-decoration: none;
       border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .btn:hover {
+      background: #1ebe5d;
     }
   </style>
 </head>
-
 <body>
 
-<header>Predial Store</header>
+  <h1>Predial Store</h1>
 
-<section id="catalog"></section>
+  <div id="produtos" class="grid"></div>
 
-<script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ8W_BupQmElM08YyIf7SdLI66bh0W5HhDILZLy7bOFqE-cXOa5ihF5X_DzzY8wew1CYKfUZ6mfj6W/pub?output=csv";
+  <script>
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ8W_BupQmElM08YyIf7SdLI66bh0W5HhDILZLy7bOFqE-cXOa5ihF5X_DzzY8wew1CYKfUZ6mfj6W/pub?output=csv";
 
-Papa.parse(CSV_URL, {
-  download: true,
-  header: true,
-  delimiter: ";",   // ← FORÇADO
-  skipEmptyLines: true,
-  complete: function(results) {
+    function parseCSV(text) {
+      const linhas = text.split("\n").filter(l => l.trim() !== "");
+      const headers = linhas.shift().split(",").map(h => h.trim().toLowerCase());
 
-    console.log("Dados CSV:", results.data);
-
-    const catalog = document.getElementById("catalog");
-    const categories = {};
-
-    results.data.forEach(item => {
-      if (!item.Categoria) return;
-
-      if (!categories[item.Categoria]) {
-        categories[item.Categoria] = [];
-      }
-
-      categories[item.Categoria].push(item);
-    });
-
-    Object.keys(categories).forEach(cat => {
-      const title = document.createElement("h2");
-      title.textContent = cat;
-      catalog.appendChild(title);
-
-      const grid = document.createElement("div");
-      grid.className = "grid";
-
-      categories[cat].forEach(p => {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        card.innerHTML = `
-          <img src="${p.Imagem}">
-          <h3>${p.Nome}</h3>
-          <small>${p.Marca || ""}</small>
-          <p>${p.Descrição || ""}</p>
-          <div class="price">${p.Preço}</div>
-          <a class="btn" href="${p.Link}" target="_blank">Ver / Comprar</a>
-        `;
-
-        grid.appendChild(card);
+      return linhas.map(linha => {
+        const valores = linha.split(/,(?=(?:(?:[^"]"){2})[^"]*$)/);
+        const obj = {};
+        headers.forEach((h, i) => {
+          obj[h] = (valores[i] || "").replace(/^"|"$/g, "").trim();
+        });
+        return obj;
       });
+    }
 
-      catalog.appendChild(grid);
-    });
-  }
-});
-</script>
+    function criarCard(produto) {
+      const nome = produto.nome || "Produto sem nome";
+      const marca = produto.marca || "";
+      const descricao = produto.descrição || produto.descricao || "";
+      const preco = produto.preço || produto.preco || "Sob consulta";
+      const imagem = produto.imagem && produto.imagem.startsWith("http")
+        ? produto.imagem
+        : "https://via.placeholder.com/300x200?text=Sem+Imagem";
+
+      const mensagem = encodeURIComponent(
+        Olá, tenho interesse neste produto:\n\n${nome}\n${descricao}\nPreço: ${preco}
+      );
+
+      const link = produto.link && produto.link.startsWith("http")
+        ? produto.link
+        : https://wa.me/55SEUNUMEROAQUI?text=${mensagem};
+
+      const div = document.createElement("div");
+      div.className = "card";
+
+      div.innerHTML = `
+        <img src="${imagem}" alt="${nome}" onerror="this.src='https://via.placeholder.com/300x200?text=Imagem+Indisponível'">
+        <div class="nome">${nome}</div>
+        <div class="marca">${marca}</div>
+        <div class="descricao">${descricao}</div>
+        <div class="preco">${preco}</div>
+        <a class="btn" href="${link}" target="_blank">Comprar no WhatsApp</a>
+      `;
+
+      return div;
+    }
+
+    fetch(CSV_URL)
+      .then(r => r.text())
+      .then(texto => {
+        const produtos = parseCSV(texto);
+        console.log("Produtos carregados:", produtos.length);
+
+        const container = document.getElementById("produtos");
+        container.innerHTML = "";
+
+        produtos.forEach(p => {
+          container.appendChild(criarCard(p));
+        });
+      })
+      .catch(err => {
+        console.error("Erro ao carregar CSV:", err);
+      });
+  </script>
 
 </body>
-</html>

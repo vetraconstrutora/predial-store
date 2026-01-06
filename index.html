@@ -86,10 +86,6 @@
       text-decoration: none;
       border-radius: 4px;
     }
-
-    .btn:hover {
-      background: #333;
-    }
   </style>
 </head>
 
@@ -105,14 +101,16 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ8W_BupQmElM0
 Papa.parse(CSV_URL, {
   download: true,
   header: true,
+  delimiter: ";",   // ← FORÇADO
   skipEmptyLines: true,
   complete: function(results) {
 
-    const data = results.data;
+    console.log("Dados CSV:", results.data);
+
     const catalog = document.getElementById("catalog");
     const categories = {};
 
-    data.forEach(item => {
+    results.data.forEach(item => {
       if (!item.Categoria) return;
 
       if (!categories[item.Categoria]) {
@@ -135,7 +133,7 @@ Papa.parse(CSV_URL, {
         card.className = "card";
 
         card.innerHTML = `
-          <img src="${p.Imagem}" alt="">
+          <img src="${p.Imagem}">
           <h3>${p.Nome}</h3>
           <small>${p.Marca || ""}</small>
           <p>${p.Descrição || ""}</p>
